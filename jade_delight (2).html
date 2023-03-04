@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+<style>  
+form {
+	display: inline-block;
+  	margin: auto;
+  	text-align: center;
+  	vertical-align: middle;
+    background-color: rgb(214, 178, 129);
+} 
+
+body { 
+	text-align: center; 
+	background-color: rgb(228, 206, 176);
+}
+</style>
+<title>Jade Delight</title>
+</head>
+
+<body>
+<script>
+
+function MenuItem(name, cost)
+{
+	this.name = name;
+	this.cost=cost;
+}
+
+menuItems = new Array(
+	new MenuItem("Chicken Chop Suey", 5.5),
+	new MenuItem("Sweet and Sour Pork", 7.25),
+	new MenuItem("Shrimp Lo Mein", 6.80),
+	new MenuItem("Moo Shi Chicken", 9.50),
+	new MenuItem("Fried Rice", 3.25)
+);
+
+function makeSelect(name, minRange, maxRange)
+{
+	var t= "";
+	t = "<select name='" + name + "' size='1'>";
+	for (j=minRange; j<=maxRange; j++)
+	   t += "<option>" + j + "</option>";
+	t+= "</select>"; 
+	return t;
+} 
+
+function td(content, className="")
+{
+	return "<td class = '" + className + "'>" + content + "</td>";
+}
+	
+</script>
+
+<h1>Jade Delight</h1>
+<form>
+
+<p class="userInfo"><label>First Name:</label> <input type="text"  name='fname' /></p>
+<p class="userInfo"><label>Last Name*:</label>  <input type="text"  name='lname' /></p>
+<p class="userInfo address"><label>Street*:</label> <input type="text" name='street' /></p>
+<p class="userInfo address"><label>City*:</label> <input type="text" name='city' /></p>
+<p class="userInfo"><label>Phone*:</label> <input type="text"  name='phone' /></p>
+<!-- updated the onclick for pickup and delivery -->
+<p>  
+	<input type="radio"  name="p_or_d" value = "pickup" checked="checked"/>Pickup  
+	<input type="radio"  name='p_or_d' value = 'delivery'/>
+	Delivery
+</p>
+<table border="0" cellpadding="3">
+  <tr>
+    <th>Select Item</th>
+    <th>Item Name</th>
+    <th>Cost Each</th>
+    <th>Total Cost</th>
+  </tr>
+<script>
+
+  var s = "";
+  for (i=0; i< menuItems.length; i++)
+  {
+	  s += "<tr>";
+	  s += td(makeSelect("quan" + i, 0, 10),"selectQuantity");
+	  s += td(menuItems[i].name, "itemName");
+	  s += td("$" +menuItems[i].cost.toFixed(2), "cost");
+	  s += td("$<input type='text' name='cost'/>", "totalCost");
+	  s+= "</tr>";
+  }
+  document.writeln(s);
+</script>
+</table>
+<p class="subtotal totalSection"><label>Subtotal</label>: 
+   $ <input type="text"  name='subtotal' id="subtotal" />
+</p>
+<p class="tax totalSection"><label>Mass tax 6.25%:</label>
+  $ <input type="text"  name='tax' id="tax" />
+</p>
+<p class="total totalSection"><label>Total:</label> $ <input type="text"  name='total' id="total" />
+</p>
+
+<input type = "button" value = "Submit Order" />
+
+</form> 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js">    
+</script>
+<script>  
+
+		
+	/* when the submit button it clicked, it validates fields*/
+
+		const submit = document.querySelector('input[value="Submit Order"]'); 
+
+		submit.addEventListener('click', function(event) {
+
+			if (validate() == true) 
+			{ 
+				newWindow();
+			}
+		});
+
+
+	/* if any of the quantities for the items change, it updates fields */
+	$(document).ready(function() 
+	{ 
+		$(".address").hide();   
+		var subtotal = 0; 
+
+		$("select[name='quan0']").change(function() { 
+			individualCost(0);
+		}); 
+
+		$("select[name='quan1']").change(function() { 
+			individualCost(1);
+		}); 
+
+		$("select[name='quan2']").change(function() { 
+			individualCost(2);
+		}); 
+
+		$("select[name='quan3']").change(function() { 
+			individualCost(3);
+		}); 
+
+		$("select[name='quan4']").change(function() { 
+			individualCost(4);
+		}); 
+
+		$("select[name='quan5']").change(function() { 
+			individualCost(5);
+		});
+	}) 
+
+	
+
+	/* if delivery is clicked it shows the address fields so user can fill */
+	$("input:radio[value='delivery']").click(function() { 
+		$(".address").show();
+	}) 
+
+	/* if pickup is clicked it hides the address fields */
+	$("input:radio[value='pickup']").click(function() { 
+		$(".address").hide();
+	})    
+
+
+    /* calculates the costs of the items when quant is updated */
+	function individualCost(i) {      
+		var elementName = "quan" + i;
+		var cost = document.getElementsByName(elementName); 
+		var selected = cost[0].selectedIndex;   
+		var result = (selected * menuItems[i].cost).toFixed(2);   
+		document.forms[0].cost[i].value = result;  
+		subtotal(); 
+	}  
+
+	/* calculates the subtotal of the order */
+	function subtotal() 
+	{    
+		var subtotal = 0; 
+		for (var j = 0; j < menuItems.length; j++) 
+		{  
+			var cost = parseFloat(document.forms[0].cost[j].value); 
+			if (isNaN(cost)) 
+			{  
+				continue;
+			}  
+			subtotal += cost; 
+		} 
+		document.forms[0].subtotal.value = subtotal.toFixed(2); 
+		tax_and_total(subtotal);
+	} 
+
+	/* calculates the tax and adds it to the subtotal */
+	function tax_and_total(subtotal) 
+	{ 
+		var taxedTotal = (subtotal * .0625).toFixed(2); 
+		document.forms[0].tax.value = taxedTotal; 
+		var newTax = parseFloat(taxedTotal);    
+		var newTotal = (newTax + subtotal).toFixed(2);
+		document.forms[0].total.value = newTotal; 
+	}
+
+
+	/* validates all the fields */
+	function validate() 
+	{   
+		var lastName = document.forms[0].lname.value; 
+		var phone = document.forms[0].phone.value;  
+		var delivery = document.forms[0].p_or_d.value; 
+		const phoneValid = /^\D*(\d\D*){7}(\d\D*){3}?$/; 
+		var valid = true;
+
+		if (!phoneValid.test(phone)) 
+		{
+  			alert('Please enter a valid 7 or 10-digit phone number.'); 
+			valid = false;
+		} 
+		if (lastName.length < 1) 
+		{ 
+			alert("Please enter your full name"); 
+			valid = false;
+		}   
+		var check = 0;
+		for (var i = 0; i < menuItems.length; i++) 
+		{ 
+			var elementName = "quan" + i;
+			var cost = document.getElementsByName(elementName); 
+			var selected = cost[0].selectedIndex;  
+			check += selected; 
+		} 
+		if (check == 0) 
+		{ 
+			alert("There is no items ordered"); 
+			valid = false;
+		} 
+		if (delivery == "delivery") 
+		{ 
+			var street = document.forms[0].street.value; 
+			var city = document.forms[0].city.value; 
+			if (street.length < 1 || city.length < 1) { 
+				alert("Please enter both your street and city names"); 
+				valid = false;
+			} 
+		} 
+		return valid;
+	}   
+
+	/* creates a new window with the order summary*/
+	function newWindow() 
+	{  
+		var new_window = window.open("Order Summary", "", "");  
+		var name = document.getElementsByClassName("itemName");
+
+		new_window.document.write("<h1>Thank you for ordering!</h1><br>"
+		+ "<h2> ORDER SUMMARY </h2><br>" + "<div class='ordered'>" );
+		
+		for (var i = 0; i < menuItems.length; i++) 
+		{  
+			var elem_name = "quan" + i;
+			var quan = document.getElementsByName(elem_name);   
+			
+			var curr = quan[0].selectedIndex;  
+			if (curr != 0) 
+			{ 
+				new_window.document.write(curr + "   ...   " + 
+				name[i].textContent + "   ...   $" + document.forms[0].cost[i].value + "<br>");
+			} 
+		}
+ 
+		new_window.document.write("</div>");
+	
+		new_window.document.write("<br><div class='sub'> Subtotal: $" + document.forms[0].subtotal.value + "</div><br>" 
+		+ "<div class='tax'> Tax: $" + document.forms[0].tax.value + "</div><br>" 
+		+ "<div class='total'> Total: $" + document.forms[0].total.value + "</div><br>"
+		+ "<div class='time'> Estimated Time Till Ready: " + time() + "</div><br>");
+
+	}
+
+
+	/* calculates time it will take for order to come */
+	function time()
+	{ 
+		const date = new Date(); 
+		var delivery = document.forms[0].p_or_d.value;  
+		if (delivery == "delivery") 
+		{ 
+			date.setMinutes(date.getMinutes() + 45); 
+		} 
+		else 
+		{ 
+			date.setMinutes(date.getMinutes() + 15); 
+		}   
+		var minutes = date.getMinutes();
+
+		if (minutes < 10) {
+			minutes = "0" + minutes;
+		} 
+		var hours = date.getHours(); 
+		var newTime = "";
+		if (hours > 12) {  
+			newTime = (hours % 12) + ":" + minutes + " pm";  
+		}
+		else if (hours == 12) {
+			newTime = 12 + ":" + minutes + " pm";
+		}
+		else if (hours == 0) {
+			newTime = 12 + ":" + minutes + " am";
+		}  
+		else { 
+			newTime = hours + ":" + minutes + " am";
+		}
+		return newTime;
+	}
+	
+
+
+
+</script>
+</body>
+</html>
